@@ -1,0 +1,85 @@
+{
+  "name": "@hanfani/providers",
+  "version": "0.1.0",
+  "description": "Provider adapters (claude-cli, mock, Mastra) for the Hanfani agent framework.",
+  "license": "MIT",
+  "author": "Fruitizz",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./ids": {
+      "types": "./dist/provider-ids.d.ts",
+      "import": "./dist/provider-ids.js"
+    },
+    "./mastra": {
+      "types": "./dist/mastra.d.ts",
+      "import": "./dist/mastra.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/fruitizz/hanfani-providers#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fruitizz/hanfani-providers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fruitizz/hanfani-providers/issues"
+  },
+  "keywords": [
+    "hanfani",
+    "agent",
+    "workflow",
+    "ai",
+    "provider",
+    "claude",
+    "mastra"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@ag-ui/client": "^0.0.55",
+    "@hanfani/core": "^0.1.4",
+    "zod": "^3.25.76"
+  },
+  "peerDependencies": {
+    "@ai-sdk/anthropic": "^3.0.82",
+    "@mastra/core": "^1.41.0",
+    "@mastra/pg": "^1.12.1"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/anthropic": {
+      "optional": true
+    },
+    "@mastra/core": {
+      "optional": true
+    },
+    "@mastra/pg": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "devDependencies": {
+    "@ai-sdk/anthropic": "^3.0.82",
+    "@mastra/core": "^1.41.0",
+    "@mastra/pg": "^1.12.1",
+    "typescript": "^7.0.2",
+    "vitest": "^2.1.0"
+  }
+}
