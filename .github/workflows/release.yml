@@ -1,0 +1,100 @@
+name: Release
+
+# Publishes @hanfani/providers to npm when you push a version tag, e.g.:
+#   git tag v0.1.2 && git push origin v0.1.2
+#
+# Or re-run a failed publish manually:
+#   gh workflow run release.yml --ref v0.1.0
+# Prerequisite (one-time):
+#   - Repo secret NPM_TOKEN = an npm "Automation" access token with publish
+#     rights to the @hanfani scope (Automation tokens bypass 2FA, required in CI).
+#     Create at npmjs.com → Access Tokens → Generate New Token → Automation.
+#   - The token must belong to the npm user that owns @hanfani/providers (fruitizz).
+#   - Use a GitHub Actions *secret*, not a repository variable.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the GitHub Release
+  id-token: write # npm provenance (verified "built on GitHub Actions" badge)
+
+jobs:
+  release:
+    name: Publish @hanfani/providers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@v4 # reads packageManager from package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@hanfani'
+
+      - name: Install
+        run: pnpm install
+
+      - name: Guard — tag must match package.json version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::Tag v${{ steps.version.outputs.version }} != package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+
+      - name: Verify npm auth
+        run: |
+          TOKEN="$(printf '%s' "$NODE_AUTH_TOKEN" | tr -d '[:space:]')"
+          if [ -z "$TOKEN" ]; then
+            echo "::error::NPM_TOKEN secret is not set — add it under Settings → Secrets and variables → Actions → Secrets"
+            exit 1
+          fi
+          case "$TOKEN" in
+            npm_*) ;;
+            *)
+              echo "::error::NPM_TOKEN must be a single-line npm Automation token starting with npm_"
+              exit 1
+              ;;
+          esac
+          {
+            echo "@hanfani:registry=https://registry.npmjs.org/"
+            echo "//registry.npmjs.org/:_authToken=$TOKEN"
+          } > ~/.npmrc
+          echo "Authenticated as: $(npm whoami)"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm (public, with provenance)
+        run: pnpm publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
