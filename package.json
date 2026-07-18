@@ -48,6 +48,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "version:bump": "tsx scripts/bump-version.mts",
     "prepublishOnly": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
@@ -79,6 +80,7 @@
     "@ai-sdk/anthropic": "^3.0.82",
     "@mastra/core": "^1.41.0",
     "@mastra/pg": "^1.12.1",
+    "tsx": "^4.19.0",
     "typescript": "^7.0.2",
     "vitest": "^2.1.0"
   }
